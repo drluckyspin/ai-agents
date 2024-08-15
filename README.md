@@ -7,9 +7,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
+cp env.example env.bash
 ```
 
-You need to set up the following environment variables in `run.sh`. You can sign up for all accounts with the free tier.
+You need to set up the following environment variables in `env.bash`. You can sign up for all accounts with the free tier.
 
 ```bash
 LIVEKIT_URL=...
