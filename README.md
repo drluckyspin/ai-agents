@@ -1,4 +1,4 @@
-# LiveKit Assistant
+# Bain Agent Playground
 
 First, create a virtual environment, update pip, and install the required packages:
 
