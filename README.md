@@ -1,16 +1,37 @@
 # Bain Agent Playground
 
+Bain Agent Playground is a live-chat and chatbot demonstration for testing voice agents. It uses the [LiveKit](https://livekit.io) WebRTC and the [Deepgram](https://deepgram.com) Speech-to-Text API. It also uses the [OpenAI](https://openai.com/) ChatGPT API.
+
+## TL;DR
+
+```bash
+# Copy and add your API keys to env.bash
+cp agents-backend/env.example agents-backend/env.bash 
+
+# Copy and add your API keys to env.local
+cp agents-frontend/.env.example agents-frontend/.env.local
+
+# Run docker compose
+docker-compose up
+```
+
+## Manual installation
+
 First, create a virtual environment, update pip, and install the required packages:
 
 ```bash
+cd agents-backend
+
 python3 -m venv .venv
 source .venv/bin/activate
+
 pip install -U pip
 pip install -r requirements.txt
+
 cp env.example env.bash
 ```
 
-You need to set up the following environment variables in `env.bash`. You can sign up for all accounts with the free tier.
+You need to set up the following environment variables in `env.bash` and `.env.local.` You can sign up for all accounts with the free tier.
 
 ```bash
 LIVEKIT_URL=...
@@ -20,9 +41,10 @@ DEEPGRAM_API_KEY=...
 OPENAI_API_KEY=...
 ```
 
-Then, run the assistant:
+Then, run the backend assistant:
 
 ```bash
+cd agents-backend
 ./run.sh [voice | video]
 ```
 
@@ -30,6 +52,8 @@ Finally, you want to run the Agent Playground UI:
 
 ```bash
 cd agents-frontend
+cp .env.example .env.local
+
 npm install
 npm run dev
 ```

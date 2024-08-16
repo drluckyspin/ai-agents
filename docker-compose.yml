@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+
+  # Run the Playground UI
+  agents-frontend:
+    build:
+      context: ./agents-frontend
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      agents-backend:
+        condition: service_started
+
+  # Run the Agent Backend first, we want this started before the UI starts
+  agents-backend:
+    build:
+      context: ./agents-backend
+      dockerfile: Dockerfile
+
+  
