@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
-import 'package:hp_live_kit/presentation/theme/text_size.dart';
 import 'package:hp_live_kit/presentation/widgets/tab_view.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:livekit_client/livekit_client.dart';
 
 import '../theme/dimen.dart';
 
@@ -21,7 +23,12 @@ class _HomeScreenState extends State<HomeScreen> {
   static const String tabSummary = 'Summary';
   static const double micImageSize = 40.0;
   String selectedTab = tabConversation;
-  bool isMicMuted = false;
+
+  List<MediaDevice> _audioInputs = [];
+  StreamSubscription? _subscription;
+  MediaDevice? _selectedAudioDevice;
+  LocalAudioTrack? _audioTrack;
+  bool _enableAudio = true;
 
   @override
   void initState() {
@@ -30,13 +37,55 @@ class _HomeScreenState extends State<HomeScreen> {
     if (Platform.isAndroid) {
       _checkPermissions();
     }
+
+    _subscription =
+        Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
+    Hardware.instance.enumerateDevices().then(_loadDevices);
+  }
+
+  @override
+  void deactivate() {
+    _subscription?.cancel();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  void _loadDevices(List<MediaDevice> devices) async {
+    _audioInputs = devices.where((d) => d.kind == 'audioinput').toList();
+
+    if (_audioInputs.isNotEmpty) {
+      if (_selectedAudioDevice == null) {
+        _selectedAudioDevice = _audioInputs.first;
+        Future.delayed(const Duration(milliseconds: 100), () async {
+          await _changeLocalAudioTrack();
+          setState(() {});
+        });
+      }
+    }
+    setState(() {});
+  }
+
+  Future<void> _setEnableAudio(value) async {
+    _enableAudio = value;
+    if (!_enableAudio) {
+      await _audioTrack?.stop();
+      _audioTrack = null;
+    } else {
+      await _changeLocalAudioTrack();
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final micIconPath = isMicMuted
-        ? 'assets/images/ic_microphone_muted.svg'
-        : 'assets/images/ic_microphone.svg';
+    final micIconPath = _enableAudio
+        ? 'assets/images/ic_microphone.svg'
+        : 'assets/images/ic_microphone_muted.svg';
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -111,20 +160,52 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             borderRadius: BorderRadius.circular(Dimen.radius),
                           ),
-                          child: const Row(
+                          child: Flex(
+                            direction: Axis.vertical,
                             children: [
-                              Padding(
-                                padding: EdgeInsets.all(Dimen.spacingS),
-                                child: Text(
-                                  'Main microphone',
-                                  style: TextStyle(
-                                      fontSize: TextSize.body1,
-                                      fontWeight: FontWeight.w400,
-                                      color: grayMicrophoneInUse),
+                              Expanded(
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton2<MediaDevice>(
+                                    isExpanded: true,
+                                    disabledHint:
+                                        const Text('Disabled Microphone'),
+                                    hint: const Text(
+                                      'Select Microphone',
+                                    ),
+                                    items: _enableAudio
+                                        ? _audioInputs
+                                            .map((MediaDevice item) =>
+                                                DropdownMenuItem<MediaDevice>(
+                                                  value: item,
+                                                  child: Text(
+                                                    item.label,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ))
+                                            .toList()
+                                        : [],
+                                    value: _selectedAudioDevice,
+                                    onChanged: (MediaDevice? value) async {
+                                      if (value != null) {
+                                        _selectedAudioDevice = value;
+                                        await _changeLocalAudioTrack();
+                                        setState(() {});
+                                      }
+                                    },
+                                    buttonStyleData: const ButtonStyleData(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 16),
+                                      height: 35,
+                                      width: 250,
+                                    ),
+                                    menuItemStyleData: const MenuItemStyleData(
+                                      height: 35,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              Icon(Icons.keyboard_arrow_down_outlined,
-                                  color: chevronDownColor),
+                              )
                             ],
                           ),
                         ),
@@ -133,9 +214,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Expanded(
-                  child: Center(
-                    child: Text(
-                      textForTab(selectedTab),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      alignment: Alignment.topLeft,
+                      color: Colors.black,
+                      child: Text(
+                        style: const TextStyle(color: Colors.white),
+                        textForTab(selectedTab),
+                      ),
                     ),
                   ),
                 ),
@@ -163,9 +250,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onMicPressed() {
-    // TODO: For now it will just change image
     setState(() {
-      isMicMuted = !isMicMuted;
+      _setEnableAudio(!_enableAudio);
     });
   }
 
@@ -173,6 +259,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final status = await Permission.microphone.request();
     if (status.isPermanentlyDenied) {
       print('Microphone Permission disabled');
+    }
+  }
+
+  Future<void> _changeLocalAudioTrack() async {
+    if (_audioTrack != null) {
+      await _audioTrack!.stop();
+      _audioTrack = null;
+    }
+
+    if (_selectedAudioDevice != null) {
+      _audioTrack = await LocalAudioTrack.create(AudioCaptureOptions(
+        deviceId: _selectedAudioDevice!.deviceId,
+      ));
+      await _audioTrack!.start();
     }
   }
 }
