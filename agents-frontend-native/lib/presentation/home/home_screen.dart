@@ -29,6 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
   MediaDevice? _selectedAudioDevice;
   LocalAudioTrack? _audioTrack;
   bool _enableAudio = true;
+  String logString = '';
+
+  final url = 'wss://app1-rto76cus.livekit.cloud';
+  final token =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI2OTU1Mjc0LCJleHAiOjE3MjY5NzY4NzR9.VmLdIuZRTh_zG4voj6REfy5DhL5MChPACb6uoOZYVs0';
 
   @override
   void initState() {
@@ -213,15 +218,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    style: const TextStyle(color: Colors.black),
+                    logString,
+                  ),
+                ),
+                Flexible(
+                  fit: FlexFit.loose,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 20.0),
                     child: Container(
                       alignment: Alignment.topLeft,
                       color: Colors.black,
-                      child: Text(
-                        style: const TextStyle(color: Colors.white),
-                        textForTab(selectedTab),
+                      child: SingleChildScrollView(
+                        child: Column(
+                            children: _sortedTranscriptions
+                                .map(
+                                  (segment) => ListTile(
+                                    title: Text(
+                                      segment.text,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                )
+                                .toList()),
                       ),
                     ),
                   ),
@@ -245,8 +267,56 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onSettingsPressed() {
-    // TODO: Not Implemented
+  List<TranscriptionSegment> _sortedTranscriptions = [];
+  late EventsListener<RoomEvent> _listener;
+  Map<String, TranscriptionSegment> _transcriptions = {};
+
+  void _onSettingsPressed() async {
+    setState(() {});
+    try {
+      final room = Room(
+        roomOptions: const RoomOptions(
+          defaultAudioPublishOptions: AudioPublishOptions(
+            name: 'custom_audio_track_name',
+          ),
+        ),
+      );
+      // Create a Listener before connecting
+      _listener = room.createListener();
+
+      await room.prepareConnection(url, token);
+
+      // Try to connect to the room
+      // This will throw an Exception if it fails for any reason.
+      await room.connect(
+        url,
+        token,
+        fastConnectOptions: FastConnectOptions(
+          microphone: TrackOption(track: _audioTrack),
+        ),
+      );
+
+      // Transcription part
+      _listener.on<TranscriptionEvent>((event) {
+        for (final segment in event.segments) {
+          _transcriptions[segment.id] = segment;
+        }
+        // Sort transcriptions
+        _sortedTranscriptions = _transcriptions.values.toList()
+          ..sort((a, b) => a.firstReceivedTime.compareTo(b.firstReceivedTime));
+
+        setState(() {
+          _transcriptions;
+          _sortedTranscriptions;
+        });
+      });
+    } catch (error) {
+      print('Could not connect $error');
+    } finally {
+      setState(() {
+        logString = 'Connected';
+      });
+    }
   }
 
   void _onMicPressed() {
