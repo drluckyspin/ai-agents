@@ -6,5 +6,5 @@ class Dimen {
   static const double spacingXl = 20.0;
   static const double spacingXxl = 24.0;
   static const double radius = 6.0;
-
+  static const double spacing10 = 10.0;
 }

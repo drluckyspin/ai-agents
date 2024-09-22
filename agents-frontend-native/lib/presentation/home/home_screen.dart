@@ -5,6 +5,8 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
+import 'package:hp_live_kit/presentation/theme/text_size.dart';
+import 'package:hp_live_kit/presentation/widgets/chat_item.dart';
 import 'package:hp_live_kit/presentation/widgets/tab_view.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -33,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final url = 'wss://app1-rto76cus.livekit.cloud';
   final token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI2OTU1Mjc0LCJleHAiOjE3MjY5NzY4NzR9.VmLdIuZRTh_zG4voj6REfy5DhL5MChPACb6uoOZYVs0';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI3MDI4NTcwLCJleHAiOjE3MjcwNTAxNzB9.UfXthLxAoHQbaxyWDw0jfpz35TYJF2CWcotjWGhdvfQ';
 
   @override
   void initState() {
@@ -57,6 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _subscription?.cancel();
+    (() async {
+      await _listener.dispose();
+      await _room.dispose();
+    })();
     super.dispose();
   }
 
@@ -91,11 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final micIconPath = _enableAudio
         ? 'assets/images/ic_microphone.svg'
         : 'assets/images/ic_microphone_muted.svg';
+
     return Container(
       color: Colors.white,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.grey.shade100,
           appBar: AppBar(
             flexibleSpace: const Image(
               image: AssetImage('assets/images/img_hp_app_bar.png'),
@@ -132,14 +139,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const Spacer(),
                       InkWell(
-                          onTap: _onSettingsPressed,
-                          child: SvgPicture.asset(
-                              'assets/images/ic_settings.svg')),
+                        onTap: _onSettingsPressed,
+                        child:
+                            SvgPicture.asset('assets/images/ic_settings.svg'),
+                      ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: Dimen.spacingXl),
                   child: SvgPicture.asset('assets/images/img_audio_waves.svg'),
                 ),
                 IntrinsicHeight(
@@ -156,94 +165,94 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: Dimen.spacingXs),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: grayBorderColor,
-                              style: BorderStyle.solid,
-                              width: 1.0,
-                            ),
-                            borderRadius: BorderRadius.circular(Dimen.radius),
-                          ),
-                          child: Flex(
-                            direction: Axis.vertical,
-                            children: [
-                              Expanded(
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton2<MediaDevice>(
-                                    isExpanded: true,
-                                    disabledHint:
-                                        const Text('Disabled Microphone'),
-                                    hint: const Text(
-                                      'Select Microphone',
-                                    ),
-                                    items: _enableAudio
-                                        ? _audioInputs
-                                            .map((MediaDevice item) =>
-                                                DropdownMenuItem<MediaDevice>(
-                                                  value: item,
-                                                  child: Text(
-                                                    item.label,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                    ),
+                        child: Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            Expanded(
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton2<MediaDevice>(
+                                  isExpanded: true,
+                                  disabledHint:
+                                      const Text('Disabled Microphone'),
+                                  hint: const Text(
+                                    'Select Microphone',
+                                  ),
+                                  items: _enableAudio
+                                      ? _audioInputs
+                                          .map((MediaDevice item) =>
+                                              DropdownMenuItem<MediaDevice>(
+                                                value: item,
+                                                child: Text(
+                                                  item.label,
+                                                  style: const TextStyle(
+                                                    fontSize: TextSize.body1,
                                                   ),
-                                                ))
-                                            .toList()
-                                        : [],
-                                    value: _selectedAudioDevice,
-                                    onChanged: (MediaDevice? value) async {
-                                      if (value != null) {
-                                        _selectedAudioDevice = value;
-                                        await _changeLocalAudioTrack();
-                                        setState(() {});
-                                      }
-                                    },
-                                    buttonStyleData: const ButtonStyleData(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 16),
-                                      height: 35,
-                                      width: 250,
-                                    ),
-                                    menuItemStyleData: const MenuItemStyleData(
-                                      height: 35,
+                                                ),
+                                              ))
+                                          .toList()
+                                      : [],
+                                  value: _selectedAudioDevice,
+                                  onChanged: (MediaDevice? value) async {
+                                    if (value != null) {
+                                      _selectedAudioDevice = value;
+                                      await _changeLocalAudioTrack();
+                                      setState(() {});
+                                    }
+                                  },
+                                  buttonStyleData: ButtonStyleData(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: Dimen.spacingL),
+                                    height: 35,
+                                    width: 250,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: grayBorderColor,
+                                      ),
+                                      color: Colors.white,
                                     ),
                                   ),
+                                  iconStyleData: const IconStyleData(
+                                    icon: Icon(
+                                      Icons.keyboard_arrow_down_outlined,
+                                    ),
+                                    iconSize: 20,
+                                    iconEnabledColor: chevronDownColor,
+                                    iconDisabledColor: chevronDownColor,
+                                  ),
+                                  menuItemStyleData: const MenuItemStyleData(
+                                    height: 35,
+                                  ),
                                 ),
-                              )
-                            ],
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
-                      )
+                      ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Text(
-                    style: const TextStyle(color: Colors.black),
-                    logString,
                   ),
                 ),
                 Flexible(
                   fit: FlexFit.loose,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
+                    padding: const EdgeInsets.only(top: Dimen.spacingXl),
                     child: Container(
                       alignment: Alignment.topLeft,
-                      color: Colors.black,
-                      child: SingleChildScrollView(
-                        child: Column(
-                            children: _sortedTranscriptions
-                                .map(
-                                  (segment) => ListTile(
-                                    title: Text(
-                                      segment.text,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                )
-                                .toList()),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                            BorderRadius.all(Radius.circular(Dimen.radius)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: Dimen.spacing10),
+                        child: ListView.builder(
+                          itemCount: _sortedTranscriptions.length,
+                          itemBuilder: (BuildContext context, position) {
+                            final segment = _sortedTranscriptions[position];
+                            return ChatItem(
+                                participant: segment.id, text: segment.text);
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -269,12 +278,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<TranscriptionSegment> _sortedTranscriptions = [];
   late EventsListener<RoomEvent> _listener;
-  Map<String, TranscriptionSegment> _transcriptions = {};
+  final Map<String, TranscriptionSegment> _transcriptions = {};
+  late Room _room;
 
   void _onSettingsPressed() async {
     setState(() {});
     try {
-      final room = Room(
+      _room = Room(
         roomOptions: const RoomOptions(
           defaultAudioPublishOptions: AudioPublishOptions(
             name: 'custom_audio_track_name',
@@ -282,13 +292,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
       // Create a Listener before connecting
-      _listener = room.createListener();
+      _listener = _room.createListener();
 
-      await room.prepareConnection(url, token);
+      await _room.prepareConnection(url, token);
 
       // Try to connect to the room
       // This will throw an Exception if it fails for any reason.
-      await room.connect(
+      await _room.connect(
         url,
         token,
         fastConnectOptions: FastConnectOptions(
@@ -303,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         // Sort transcriptions
         _sortedTranscriptions = _transcriptions.values.toList()
-          ..sort((a, b) => a.firstReceivedTime.compareTo(b.firstReceivedTime));
+          ..sort((a, b) => a.lastReceivedTime.compareTo(b.lastReceivedTime));
 
         setState(() {
           _transcriptions;
