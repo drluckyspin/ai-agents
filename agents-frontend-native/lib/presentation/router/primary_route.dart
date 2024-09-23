@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hp_live_kit/presentation/home/home_screen.dart';
+import 'package:hp_live_kit/presentation/settings/settings_screen.dart';
 
 import '../../common/constant.dart';
 import '../connect/connect_screen.dart';
@@ -7,7 +8,8 @@ import '../connect/connect_screen.dart';
 enum PrimaryRoute {
   splash(SizedBox),
   connect(ConnectScreen),
-  home(HomeScreen);
+  home(HomeScreen),
+  settings(SettingsScreen);
 
   const PrimaryRoute(this._routeType);
 

@@ -5,13 +5,17 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hp_live_kit/di/service_locator.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
 import 'package:hp_live_kit/presentation/theme/text_size.dart';
 import 'package:hp_live_kit/presentation/widgets/chat_item.dart';
 import 'package:hp_live_kit/presentation/widgets/tab_view.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../router/primary_route.dart';
+import '../settings/settings_controller.dart';
 import '../theme/dimen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,12 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _enableAudio = true;
   String logString = '';
   bool _isUserScrollingUp = false;
+  bool isFirstTIme = true;
 
   final ScrollController _scrollController = ScrollController();
 
-  final url = 'wss://app1-rto76cus.livekit.cloud';
-  final token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI3MDQzODcyLCJleHAiOjE3MjcwNjU0NzJ9.PMhSr1snSvf0dXJmz7_0TmZ7vontxEz4HdYGrT0_uCQ';
+  final url = 'wss://cool-platform-app-eocfexdr.livekit.cloud';
 
   @override
   void initState() {
@@ -90,7 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_audioInputs.isNotEmpty) {
       if (_selectedAudioDevice == null) {
-        _selectedAudioDevice = _audioInputs.first;
+        if (_audioInputs.length > 1) {
+          _selectedAudioDevice = _audioInputs[1];
+        } else {
+          _selectedAudioDevice = _audioInputs.first;
+        }
         Future.delayed(const Duration(milliseconds: 100), () async {
           await _changeLocalAudioTrack();
           setState(() {});
@@ -113,6 +120,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // For demo purpose, Connect initially to room
+    if (isFirstTIme) {
+      connect();
+      isFirstTIme = false;
+    }
+
     final micIconPath = _enableAudio
         ? 'assets/images/ic_microphone.svg'
         : 'assets/images/ic_microphone_muted.svg';
@@ -121,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       color: Colors.white,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: Colors.grey.shade100,
+          backgroundColor: background,
           appBar: AppBar(
             flexibleSpace: const Image(
               image: AssetImage('assets/images/img_hp_app_bar.png'),
@@ -158,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const Spacer(),
                       InkWell(
-                        onTap: _onSettingsPressed,
+                        onTap: () => _onSettingsPressed(context),
                         child:
                             SvgPicture.asset('assets/images/ic_settings.svg'),
                       ),
@@ -304,7 +317,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, TranscriptionSegment> _transcriptions = {};
   late Room _room;
 
-  void _onSettingsPressed() async {
+  void _onSettingsPressed(BuildContext context) async {
+    context.push(
+      PrimaryRoute.settings.path,
+      extra: _audioTrack,
+    );
+  }
+
+  void connect() async {
+    final token = await serviceLocator.get<SettingsController>().getToken('');
     setState(() {});
     try {
       _room = Room(
@@ -334,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
         for (final segment in event.segments) {
           _transcriptions[segment.id] = segment;
         }
-        // Sort transcriptions
+
         _sortedTranscriptions = _transcriptions.values.toList()
           ..sort((a, b) => a.firstReceivedTime.compareTo(b.firstReceivedTime));
 
@@ -352,6 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       setState(() {
         logString = 'Connected';
+        print(logString);
       });
     }
   }
@@ -389,4 +411,12 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     });
   }
+}
+
+class TranscriptionSegmentWithParticipant {
+  final TranscriptionSegment transcriptionSegment;
+  final String participant;
+
+  TranscriptionSegmentWithParticipant(
+      {required this.transcriptionSegment, required this.participant});
 }
