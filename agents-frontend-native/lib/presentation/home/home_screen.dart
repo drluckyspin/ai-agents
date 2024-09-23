@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
 import 'package:hp_live_kit/presentation/theme/text_size.dart';
@@ -32,10 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   LocalAudioTrack? _audioTrack;
   bool _enableAudio = true;
   String logString = '';
+  bool _isUserScrollingUp = false;
+
+  final ScrollController _scrollController = ScrollController();
 
   final url = 'wss://app1-rto76cus.livekit.cloud';
   final token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI3MDI4NTcwLCJleHAiOjE3MjcwNTAxNzB9.UfXthLxAoHQbaxyWDw0jfpz35TYJF2CWcotjWGhdvfQ';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6IiIsIm5hbWUiOiJDb29sLUJhaW4tQ2xpZW50IiwidmlkZW8iOnsicm9vbUNyZWF0ZSI6ZmFsc2UsInJvb21MaXN0IjpmYWxzZSwicm9vbVJlY29yZCI6ZmFsc2UsInJvb21BZG1pbiI6ZmFsc2UsInJvb21Kb2luIjp0cnVlLCJyb29tIjoibXktcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblB1Ymxpc2hTb3VyY2VzIjpbXSwiY2FuVXBkYXRlT3duTWV0YWRhdGEiOmZhbHNlLCJpbmdyZXNzQWRtaW4iOmZhbHNlLCJoaWRkZW4iOmZhbHNlLCJyZWNvcmRlciI6ZmFsc2UsImFnZW50IjpmYWxzZX0sInNpcCI6eyJhZG1pbiI6ZmFsc2UsImNhbGwiOmZhbHNlfSwiYXR0cmlidXRlcyI6e30sIm1ldGFkYXRhIjoiIiwic2hhMjU2IjoiIiwic3ViIjoiQ29vbC1CYWluIiwiaXNzIjoiQVBJTHJHVkVFMzJ5N2h5IiwibmJmIjoxNzI3MDQzODcyLCJleHAiOjE3MjcwNjU0NzJ9.PMhSr1snSvf0dXJmz7_0TmZ7vontxEz4HdYGrT0_uCQ';
 
   @override
   void initState() {
@@ -48,6 +52,19 @@ class _HomeScreenState extends State<HomeScreen> {
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
+
+    _scrollController.addListener(_onListViewScroll);
+  }
+
+  void _onListViewScroll() {
+    // Check if user is scrolling away from the bottom
+    if (_scrollController.position.userScrollDirection ==
+        ScrollDirection.reverse) {
+      _isUserScrollingUp = true; // User scrolled up
+    } else if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      _isUserScrollingUp = false; // User scrolled back to the bottom
+    }
   }
 
   @override
@@ -63,6 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
       await _listener.dispose();
       await _room.dispose();
     })();
+    _scrollController.removeListener(_onListViewScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -220,6 +239,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     iconEnabledColor: chevronDownColor,
                                     iconDisabledColor: chevronDownColor,
                                   ),
+                                  dropdownStyleData: const DropdownStyleData(
+                                      decoration:
+                                          BoxDecoration(color: Colors.white)),
                                   menuItemStyleData: const MenuItemStyleData(
                                     height: 35,
                                   ),
@@ -246,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: Dimen.spacing10),
                         child: ListView.builder(
+                          controller: _scrollController,
                           itemCount: _sortedTranscriptions.length,
                           itemBuilder: (BuildContext context, position) {
                             final segment = _sortedTranscriptions[position];
@@ -313,12 +336,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         // Sort transcriptions
         _sortedTranscriptions = _transcriptions.values.toList()
-          ..sort((a, b) => a.lastReceivedTime.compareTo(b.lastReceivedTime));
+          ..sort((a, b) => a.firstReceivedTime.compareTo(b.firstReceivedTime));
 
         setState(() {
           _transcriptions;
           _sortedTranscriptions;
         });
+
+        if (!_isUserScrollingUp) {
+          _scrollToBottom();
+        }
       });
     } catch (error) {
       print('Could not connect $error');
@@ -354,5 +381,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
       await _audioTrack!.start();
     }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    });
   }
 }
