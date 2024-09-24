@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
 import 'package:hp_live_kit/presentation/theme/text_size.dart';
+import '../../data/reporistory/livekit/room_constants.dart';
 import '../theme/dimen.dart';
 
 class ChatItem extends StatelessWidget {
@@ -14,11 +15,7 @@ class ChatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = participant == 'COOL Agent'
-        ? 'assets/images/ic_robot.svg'
-        : 'assets/images/ic_person.svg';
-    final containerBackground =
-        participant == 'COOL Agent' ? chatAgentBackground : Colors.white;
+    final chatItemParams = _getChatItemParams();
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -28,7 +25,7 @@ class ChatItem extends StatelessWidget {
           bottom: Dimen.spacingXs),
       child: Container(
         decoration: BoxDecoration(
-          color: containerBackground.withOpacity(0.1),
+          color: chatItemParams.containerBackgroundColor.withOpacity(0.1),
           borderRadius: const BorderRadius.all(Radius.circular(12.0)),
         ),
         child: Padding(
@@ -43,7 +40,7 @@ class ChatItem extends StatelessWidget {
               Row(
                 children: [
                   SvgPicture.asset(
-                    icon,
+                    chatItemParams.icon,
                     height: chatIconSize,
                     width: chatIconSize,
                   ),
@@ -77,4 +74,24 @@ class ChatItem extends StatelessWidget {
       ),
     );
   }
+
+  ChatItemViewParams _getChatItemParams() {
+    if (participant == RoomConstants.botName) {
+      return ChatItemViewParams(
+          icon: 'assets/images/ic_robot.svg',
+          containerBackgroundColor: chatAgentBackground);
+    } else {
+      return ChatItemViewParams(
+          icon: 'assets/images/ic_person.svg',
+          containerBackgroundColor: Colors.white);
+    }
+  }
+}
+
+class ChatItemViewParams {
+  final String icon;
+  final Color containerBackgroundColor;
+
+  ChatItemViewParams(
+      {required this.icon, required this.containerBackgroundColor});
 }

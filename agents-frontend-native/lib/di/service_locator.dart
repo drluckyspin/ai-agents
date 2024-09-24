@@ -1,15 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:hp_live_kit/data/network/network_service.dart';
-import 'package:hp_live_kit/data/network/network_service_impl.dart';
-import 'package:hp_live_kit/data/reporistory/token_repository.dart';
-import 'package:hp_live_kit/data/room/room_service.dart';
+import 'package:hp_live_kit/data/remote/network/network_service.dart';
+import 'package:hp_live_kit/data/remote/network/network_service_impl.dart';
+import 'package:hp_live_kit/data/reporistory/livekit/room_repository.dart';
+import 'package:hp_live_kit/data/reporistory/livekit/room_repository_impl.dart';
+import 'package:hp_live_kit/data/reporistory/token/token_repository.dart';
+import 'package:hp_live_kit/data/remote/livekit/room_service.dart';
 import 'package:hp_live_kit/presentation/connect/bloc/connect_bloc.dart';
 import 'package:hp_live_kit/presentation/router/primary_route_impl.dart';
 import 'package:hp_live_kit/presentation/router/primary_router.dart';
 import 'package:hp_live_kit/presentation/settings/settings_controller.dart';
 
-import '../data/reporistory/token_repository_impl.dart';
+import '../data/reporistory/token/token_repository_impl.dart';
 
 final serviceLocator = GetIt.instance;
 
@@ -48,6 +50,9 @@ void _registerNetworkClients() {
 void _registerRepositories() {
   serviceLocator.registerFactory<TokenRepository>(
     () => TokenRepositoryImpl(serviceLocator()),
+  );
+  serviceLocator.registerFactory<RoomRepository>(
+    () => RoomRepositoryImpl(serviceLocator(), serviceLocator()),
   );
   serviceLocator.registerSingleton<RoomService>(RoomService());
 }

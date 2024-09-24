@@ -45,6 +45,7 @@ dependencies:
   livekit_client: ^2.2.6
   dropdown_button2: ^2.3.9
   dio: ^5.7.0
+  uuid: ^4.5.0
 
 dev_dependencies:
   flutter_test:

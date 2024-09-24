@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hp_live_kit/data/room/room_service.dart';
+import 'package:hp_live_kit/data/remote/livekit/room_service.dart';
 import 'package:hp_live_kit/presentation/settings/settings_controller.dart';
 import 'package:hp_live_kit/presentation/theme/colors.dart';
 import 'package:hp_live_kit/presentation/theme/text_size.dart';
