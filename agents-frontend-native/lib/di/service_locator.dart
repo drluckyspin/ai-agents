@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hp_live_kit/data/local/environment_params_service.dart';
+import 'package:hp_live_kit/data/local/environment_params_service_impl.dart';
 import 'package:hp_live_kit/data/remote/network/network_service.dart';
 import 'package:hp_live_kit/data/remote/network/network_service_impl.dart';
 import 'package:hp_live_kit/data/reporistory/livekit/room_repository.dart';
@@ -21,6 +23,7 @@ Future<void> init() async {
   _registerRouter();
   _registerNetworkClients();
   _registerRepositories();
+  _registerServices();
 }
 
 T get<T extends Object>() {
@@ -53,10 +56,16 @@ void _registerNetworkClients() {
 
 void _registerRepositories() {
   serviceLocator.registerFactory<TokenRepository>(
-    () => TokenRepositoryImpl(serviceLocator()),
+    () => TokenRepositoryImpl(serviceLocator(), serviceLocator()),
   );
   serviceLocator.registerFactory<RoomRepository>(
-    () => RoomRepositoryImpl(serviceLocator(), serviceLocator()),
+    () => RoomRepositoryImpl(
+        serviceLocator(), serviceLocator(), serviceLocator()),
   );
+}
+
+void _registerServices() {
   serviceLocator.registerSingleton<RoomService>(RoomService());
+  serviceLocator.registerSingleton<EnvironmentParamsService>(
+      EnvironmentParamsServiceImpl());
 }
