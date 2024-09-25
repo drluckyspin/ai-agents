@@ -7,6 +7,7 @@ import 'package:hp_live_kit/data/reporistory/livekit/room_repository_impl.dart';
 import 'package:hp_live_kit/data/reporistory/token/token_repository.dart';
 import 'package:hp_live_kit/data/remote/livekit/room_service.dart';
 import 'package:hp_live_kit/presentation/connect/bloc/connect_bloc.dart';
+import 'package:hp_live_kit/presentation/home/bloc/home_bloc.dart';
 import 'package:hp_live_kit/presentation/router/primary_route_impl.dart';
 import 'package:hp_live_kit/presentation/router/primary_router.dart';
 import 'package:hp_live_kit/presentation/settings/settings_controller.dart';
@@ -38,6 +39,9 @@ void _registerBlocs() {
   );
   serviceLocator.registerFactory<SettingsController>(
     () => SettingsController(serviceLocator()),
+  );
+  serviceLocator.registerFactory<HomeBloc>(
+    () => HomeBloc(serviceLocator()),
   );
 }
 

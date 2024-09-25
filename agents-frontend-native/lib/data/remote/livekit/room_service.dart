@@ -3,16 +3,18 @@ import 'dart:async';
 import 'package:hp_live_kit/data/reporistory/livekit/room_constants.dart';
 import 'package:livekit_client/livekit_client.dart';
 
+import '../../../common/model/transcription_with_participant.dart';
+
 class RoomService {
-  final Map<String, TranscriptionSegmentWithParticipant> _transcriptions = {};
+  final Map<String, TranscriptionWithParticipant> _transcriptions = {};
   late EventsListener<RoomEvent> _listener;
   late Room _room;
 
-  final StreamController<List<TranscriptionSegmentWithParticipant>>
+  final StreamController<List<TranscriptionWithParticipant>>
       _eventStreamController =
-      StreamController<List<TranscriptionSegmentWithParticipant>>();
+      StreamController<List<TranscriptionWithParticipant>>();
 
-  Stream<List<TranscriptionSegmentWithParticipant>> get eventStream =>
+  Stream<List<TranscriptionWithParticipant>> get eventStream =>
       _eventStreamController.stream;
 
   Future<void> connect(
@@ -52,8 +54,8 @@ class RoomService {
           final oldTranscriptionData = _transcriptions[segment.id];
           final participantName =
               oldTranscriptionData?.participant ?? participant;
-          _transcriptions[segment.id] = TranscriptionSegmentWithParticipant(
-              transcriptionSegment: segment, participant: participantName);
+          _transcriptions[segment.id] = TranscriptionWithParticipant(
+              transcriptionText: segment.text, participant: participantName);
         }
 
         // Send data via stream
@@ -71,12 +73,4 @@ class RoomService {
     await _listener.dispose();
     await _room.dispose();
   }
-}
-
-class TranscriptionSegmentWithParticipant {
-  final TranscriptionSegment transcriptionSegment;
-  final String participant;
-
-  TranscriptionSegmentWithParticipant(
-      {required this.transcriptionSegment, required this.participant});
 }

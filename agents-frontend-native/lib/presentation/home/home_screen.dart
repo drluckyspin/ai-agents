@@ -16,6 +16,7 @@ import 'package:hp_live_kit/presentation/widgets/tab_view.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../common/model/transcription_with_participant.dart';
 import '../router/primary_route.dart';
 import '../theme/dimen.dart';
 
@@ -40,10 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String logString = '';
   bool _isUserScrollingUp = false;
   bool isFirstTIme = true;
-  List<TranscriptionSegmentWithParticipant> _sortedTranscriptions = [];
+  List<TranscriptionWithParticipant> _sortedTranscriptions = [];
   final ScrollController _scrollController = ScrollController();
 
-  late StreamSubscription<List<TranscriptionSegmentWithParticipant>>
+  late StreamSubscription<List<TranscriptionWithParticipant>>
       _transcriptionEventSubscription;
 
   @override
@@ -138,11 +139,11 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: _scrollController,
               itemCount: _sortedTranscriptions.length,
               itemBuilder: (BuildContext context, position) {
-                final segment = _sortedTranscriptions[position];
+                final transcription = _sortedTranscriptions[position];
                 return ChatItem(
                     key: UniqueKey(),
-                    participant: segment.participant,
-                    text: segment.transcriptionSegment.text);
+                    participant: transcription.participant,
+                    text: transcription.transcriptionText);
               },
             ),
           ),
@@ -362,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _transcriptionEventSubscription = serviceLocator
         .get<RoomRepository>()
         .getTranscriptionsStream()
-        .listen((List<TranscriptionSegmentWithParticipant> events) {
+        .listen((List<TranscriptionWithParticipant> events) {
       _sortedTranscriptions = events;
       setState(() => _sortedTranscriptions = events);
 

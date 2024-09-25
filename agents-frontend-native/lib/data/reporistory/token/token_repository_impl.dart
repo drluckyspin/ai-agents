@@ -15,11 +15,11 @@ final class TokenRepositoryImpl implements TokenRepository {
     final uuid = const Uuid().v4();
 
     final tokenRequest = TokenRequest(
-        "APID4BNCFh7rdTX",
-        "eUrvti3Le5S14regOz846FBmF9UImn8x1IQQlRvcgUgB",
-        "HP-COOL",
-        "Ivan Panic",
-        "Flutter-$uuid");
+        'APID4BNCFh7rdTX',
+        'eUrvti3Le5S14regOz846FBmF9UImn8x1IQQlRvcgUgB',
+        'HP-COOL',
+        'Ivan Panic',
+        'Flutter-$uuid');
 
     final result = await _networkClient.post(
         EndpointPath.token.value, tokenRequest.toJson());
