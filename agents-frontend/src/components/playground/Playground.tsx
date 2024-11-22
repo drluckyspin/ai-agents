@@ -91,10 +91,9 @@ export default function Playground({
   }
 
   const agentVideoTrack = tracks.find(
-    (trackRef) =>
-      trackRef.publication.kind === Track.Kind.Video &&
-      trackRef.participant.isAgent
+    (trackRef) => trackRef.publication.kind === Track.Kind.Video
   );
+
 
   const subscribedVolumes = useMultibandTrackVolume(
     agentAudioTrack?.publication?.track,

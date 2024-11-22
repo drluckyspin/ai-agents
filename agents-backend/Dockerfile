@@ -17,4 +17,4 @@ RUN pip install -U pip
 RUN pip install -r requirements.txt
 
 # Run the application
-CMD ["./run.sh", "voice"]
+CMD ["./run.sh", "video"]
