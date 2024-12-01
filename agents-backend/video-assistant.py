@@ -1,12 +1,16 @@
 import asyncio
-from typing import Annotated
 
 from livekit import agents, rtc
-
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, tokenize, tts
 from livekit.agents.llm import ChatContext, ChatImage, ChatMessage
 from livekit.agents.voice_assistant import VoiceAssistant
 from livekit.plugins import deepgram, openai, silero
+
+from typing import Annotated
+from log import BasicLogger
+
+# Initialize the logger
+logger = BasicLogger()
 
 # Use this to store the latest image from a user's video track (if they have one)
 latest_video_image = None
@@ -18,7 +22,8 @@ class AssistantFunction(agents.llm.FunctionContext):
     @agents.llm.ai_callable(
         description=(
             "Called when asked to evaluate something that would require vision capabilities,"
-            "for example, an image, video, or the webcam feed."
+            "for example, analyzing an image, a video, or a webcam feed. Can also be called "
+            "to describe an image, or describe what's going on in a video."
         )
     )
     async def image(
@@ -37,7 +42,7 @@ class AssistantFunction(agents.llm.FunctionContext):
         ],
     ) -> None:
         """Process user messages related to image tasks."""
-        print(f"Function call message for processing image: {user_msg}")
+        logger.log_dim(message=f"Image processing triggered with message: {user_msg}")
         return None
 
 
@@ -55,28 +60,17 @@ async def get_video_track(room: rtc.Room) -> rtc.RemoteVideoTrack:
     """
     video_track = asyncio.Future[rtc.RemoteVideoTrack]()
 
-    print(f"****** Room: {room}")
-    print(f"****** Room remote participants: {room.remote_participants}")
-    print(f"****** Room remote participants keys: {room.remote_participants.keys()}")
-    print(
-        f"****** Room remote participants values: {room.remote_participants.values()}"
-    )
-    print(f"****** Room remote participants items: {room.remote_participants.items()}")
-    print(f"****** Video Track: {video_track}")
+    logger.log(message=f"Searching for first video track in room: {room.name}")
+    logger.log_dim(message=f"Found participants: {room.remote_participants}")
 
     for _, participant in room.remote_participants.items():
-        print(f"****** Participant: {participant}")
         for _, track_publication in participant.track_publications.items():
-            print(f"****** Track Publication: {track_publication}")
             if track_publication.track is not None and isinstance(
                 track_publication.track, rtc.RemoteVideoTrack
             ):
-                print("****** Track Publication is a video track")
                 video_track.set_result(track_publication.track)
-                print(f"******Using video track {track_publication.track.sid}")
+                logger.log_dim(message=f"Using {participant}'s video track {video_track}")
                 break
-
-    print(f"****** Video Track2: {video_track}")
 
     return await video_track
 
@@ -94,11 +88,9 @@ async def _answer(
     """
     content: list[str | ChatImage] = [text]
 
-    # print(f"****** latest_image: {latest_image}")
-
     if latest_image is None:
         # await get_video_track(self.ctx.room)
-        print("****** latest_image is None")
+        logger.log_dim(message=" Latest_image is None")
 
     if use_image and latest_image:
         content.append(ChatImage(image=latest_image))
@@ -107,18 +99,19 @@ async def _answer(
     chat_context.messages.append(chat_message)
 
     stream = openai.LLM().chat(chat_ctx=chat_context)
-    print(f"Sending message to assistant: {text}")
+    logger.log(message=f"Sending message to Assistant: {text}")
     
     await assistant.say(stream, allow_interruptions=True)
 
     # Clear the imageReceived message after the assistant has spoken
     if use_image and latest_image:
-        print("Removing message")
         chat_context.messages.remove(chat_message)
 
 
 async def entrypoint(ctx: JobContext):
     print(f"****** ROOM NAME: {ctx.room.name}")
+
+    logger.log_dim(message=" Livekit Room Name: {ctx.room.name}")
 
     chat_context = ChatContext().append(
         role="system",
@@ -210,4 +203,8 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
+    
+    logger.log_separator()
+    logger.log(message="Starting Video Assistant")
+    
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))

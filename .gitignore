@@ -117,6 +117,9 @@ dist
 # FuseBox cache
 .fusebox/
 
+# Python cache
+agents-backend/__pycache__
+
 # DynamoDB Local files
 .dynamodb/
 

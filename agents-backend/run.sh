@@ -2,17 +2,14 @@
 
 # source the env file if it exists
 if [ -f env.bash ]; then
+    # shellcheck disable=SC1091
     source env.bash
 fi
 
-echo "** LIVEKIT URL = ${LIVEKIT_URL} **"
-
-# check for an arg of "video" or "voice" and run the corresponding python script
+# check for an arg of "video" or "voice" and run the corresponding python assistant
 if [ "$1" == "video" ]; then
-    echo "** Running Video assistant **"
     python video-assistant.py dev
 elif [ "$1" == "voice" ]; then
-    echo "** Running voice assistant **"
     python voice-assistant.py dev
 else
     echo "Usage: ./run.sh [voice | video] " 

@@ -1,6 +1,10 @@
 # Bain Agent Playground
 
-Bain Agent Playground is a real-time Conversational Agent demonstration for testing voice agents. It uses the [LiveKit](https://livekit.io) WebRTC and the [Deepgram](https://deepgram.com) Speech-to-Text API. It also uses the [OpenAI](https://openai.com/) ChatGPT API.
+Bain Agent Playground is a real-time Conversational Agent demonstration for testing voice agents. It uses:
+
+- [LiveKit](https://livekit.io) WebRTC as the event major backbone
+- [Deepgram](https://deepgram.com) Speech-to-Text API
+- [OpenAI](https://openai.com/) ChatGPT API
 
 ## TL;DR
 
@@ -14,7 +18,8 @@ cp agents-frontend/.env.example agents-frontend/.env.local
 # Run docker compose
 docker-compose up
 
-# Now connect to http://localhost:3000
+# Now connect to the frontend
+open http://localhost:3000
 ```
 
 ## Manual installation
