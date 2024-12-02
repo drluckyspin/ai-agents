@@ -1,5 +1,7 @@
 # Bain Agent Playground
 
+![Playground](playground.jpg)
+
 Bain Agent Playground is a real-time Conversational Agent demonstration for testing voice agents. It uses:
 
 - [LiveKit](https://livekit.io) WebRTC as the event major backbone
@@ -21,6 +23,24 @@ docker-compose up
 # Now connect to the frontend
 open http://localhost:3000
 ```
+
+## Playground Assistant types
+
+There are two types of assistant examples included in this project:
+
+- **[Voice Assistant](agents-backend/voice-assistant.py)**
+  - Is a basic conversational agent you can talk to in real time.
+  - It uses GPTo to generate responses and can be interrupted by the user.
+  - You can interrupt the Assistant while it's speaking.
+  - It relies on GPTo for general knowledge.
+
+- **[Video Assistant](agents-backend/video-assistant.py)**
+  - Has the same basic conversational capabilities as Voice Assistant.
+  - Additionally, it supports vision capabilities for analyzing and describing an image, a video, or a webcam feed.
+  - Triggering the vision capabilites is done by asking the Assistant things such as:
+    - _"What can you see in my video feed?"_
+    - _"What am I holding in my web cam?"_
+    - _"What is the value of Temperature in the paper in my video?"_
 
 ## Manual installation
 
@@ -65,4 +85,6 @@ npm install
 npm run dev
 ```
 
-Then navigate to <http://localhost:3000>.
+Then navigate to <http://localhost:3000> and click the "Connect" button.
+
+**Note:** The first time you connect, you will be prompted to allow the browser to access your microphone and camera.
